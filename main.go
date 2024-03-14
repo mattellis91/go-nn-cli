@@ -1,9 +1,13 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
+	"os"
+
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
@@ -39,6 +43,56 @@ func main() {
 	if err := p.Save(4*vg.Inch, 4*vg.Inch, "points.png"); err != nil {
 		panic(err)
 	}
+
+	trainCsv, err := os.Open("xorTrain.csv")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer trainCsv.Close()
+
+	reader := csv.NewReader(trainCsv)
+	records, err := reader.ReadAll()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, record := range records {
+		fmt.Println(record)
+	}
+
+	inputNodes := len(records[0])
+
+	expectedCsv, err := os.Open("xorExpected.csv")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer expectedCsv.Close()
+
+	reader = csv.NewReader(expectedCsv)
+	records, err = reader.ReadAll()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	outputNodes := len(records[0])
+
+	for _, record := range records {
+		fmt.Println(record)
+	}
+
+	fmt.Println(inputNodes)
+	fmt.Println(outputNodes)
+
+	nn := NewNN(inputNodes, inputNodes, outputNodes, 0.3)
+
+	fmt.Printf("%+v\n",nn)
+
 }
 
 type NN struct {
