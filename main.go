@@ -2,57 +2,46 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"log"
 	"math"
-	"math/rand"
 	"os"
-
-	"gonum.org/v1/gonum/mat"
-	"gonum.org/v1/plot"
-	"gonum.org/v1/plot/plotter"
-	"gonum.org/v1/plot/plotutil"
-	"gonum.org/v1/plot/vg"
 )
 
 func main() {
-	data := make([]float64, 25)
-	for i := 0; i < 25; i++ {
-		data[i] = rand.NormFloat64()
+	args := os.Args[1:]
+	if len(args) == 0 {
+		fmt.Println("Usage: go run main.go -train <train.csv> -expected <expected.csv>")
+		return
+	} else {
+		trainPtr := flag.String("train", "xorTrain.csv", "a string")
+		expectedPtr := flag.String("expected", "xorExpected.csv", "a string")
+		flag.Parse()
+		fmt.Println("train:", *trainPtr)
+		fmt.Println("expected:", *expectedPtr)
+
+		trainingData := ReadDataFromCSV(*trainPtr)
+		expectedData := ReadDataFromCSV(*expectedPtr)
+
+		nn := NewNN(len(trainingData[0]), len(trainingData[0]), len(expectedData[0]), 0.3)
+
+		fmt.Printf("%+v\n", nn)
+
 	}
-	a := mat.NewDense(5, 5, data)
-	fmt.Printf("%v", mat.Formatted(a))
+}
 
-	rand.Seed(int64(0))
+func ReadDataFromCSV(filePath string) [][]string {
 
-	p := plot.New()
-
-	p.Title.Text = "Plotutil example"
-	p.X.Label.Text = "X"
-	p.Y.Label.Text = "Y"
-
-	err := plotutil.AddLinePoints(p,
-		"First", randomPoints(15),
-		"Second", randomPoints(15),
-		"Third", randomPoints(15))
-	if err != nil {
-		panic(err)
-	}
-
-	// Save the plot to a PNG file.
-	if err := p.Save(4*vg.Inch, 4*vg.Inch, "points.png"); err != nil {
-		panic(err)
-	}
-
-	trainCsv, err := os.Open("xorTrain.csv")
+	f, err := os.Open(filePath)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer trainCsv.Close()
+	defer f.Close()
 
-	reader := csv.NewReader(trainCsv)
+	reader := csv.NewReader(f)
 	records, err := reader.ReadAll()
 
 	if err != nil {
@@ -63,76 +52,10 @@ func main() {
 		fmt.Println(record)
 	}
 
-	inputNodes := len(records[0])
-
-	expectedCsv, err := os.Open("xorExpected.csv")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer expectedCsv.Close()
-
-	reader = csv.NewReader(expectedCsv)
-	records, err = reader.ReadAll()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	outputNodes := len(records[0])
-
-	for _, record := range records {
-		fmt.Println(record)
-	}
-
-	fmt.Println(inputNodes)
-	fmt.Println(outputNodes)
-
-	nn := NewNN(inputNodes, inputNodes, outputNodes, 0.3)
-
-	fmt.Printf("%+v\n",nn)
-
-}
-
-type NN struct {
-	inputNodes int
-	hiddenNodes int
-	outputNodes int
-	learningRate float64
-}
-
-func NewNN(inputNodes, hiddenNodes, outputNodes int, learningRate float64) *NN {
-	return &NN{
-		inputNodes: inputNodes,
-		hiddenNodes: hiddenNodes,
-		outputNodes: outputNodes,
-		learningRate: learningRate,
-	}
-}
-
-func (n *NN) Train() {
-
-}
-
-func (n *NN) Predict() {
+	return records
 
 }
 
 func Sig(x float64) float64 {
 	return 1 / (1 + math.Exp(-x))
-}
-
-// randomPoints returns some random x, y points.
-func randomPoints(n int) plotter.XYs {
-	pts := make(plotter.XYs, n)
-	for i := range pts {
-		if i == 0 {
-			pts[i].X = rand.Float64()
-		} else {
-			pts[i].X = pts[i-1].X + rand.Float64()
-		}
-		pts[i].Y = pts[i].X + 10*rand.Float64()
-	}
-	return pts
 }
