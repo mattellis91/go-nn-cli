@@ -5,8 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math"
 	"os"
+	_ "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
@@ -54,8 +54,4 @@ func ReadDataFromCSV(filePath string) [][]string {
 
 	return records
 
-}
-
-func Sig(x float64) float64 {
-	return 1 / (1 + math.Exp(-x))
 }
